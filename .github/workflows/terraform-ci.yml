@@ -48,7 +48,16 @@ jobs:
         if: ${{ env.new_release == 'true' }}
         working-directory: src/terraform/mlz
         run: |
-          sed -i s/$LAST_VERSION/$LATEST_TAG/g *
+          LAST_VERSION_ESCAPED=$(echo "$LAST_VERSION" | sed 's/[.[\*^$(){}?+|\/]/\\&/g')
+          LATEST_TAG_ESCAPED=$(echo "$LATEST_TAG" | sed 's/[.[\*^$(){}?+|\/]/\\&/g')
+
+          if [[ -n "$LAST_VERSION" && -n "$LATEST_TAG" ]]; then
+            sed -i "s/$LAST_VERSION_ESCAPED/$LATEST_TAG_ESCAPED/g" *
+          else
+            echo "Error: LAST_VERSION or LATEST_TAG is empty."
+            exit 1
+          fi
+
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
           git add .
