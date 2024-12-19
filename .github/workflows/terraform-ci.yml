@@ -21,6 +21,7 @@ jobs:
           LATEST_TAG=$(echo "${RESPONSE}" | jq -r '.tag_name')
 
           echo "Latest release tag: ${LATEST_TAG}"
+          echo "LATEST_TAG=${LATEST_TAG}" >> $GITHUB_ENV
 
       - uses: actions/checkout@v4
         with:
@@ -34,29 +35,29 @@ jobs:
           LAST_VERSION=$(grep -Eo 'version = "= 4\.[0-9]+\.[0-9]+"' * 2>/dev/null | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+' || echo "none")
 
           # Compare versions
-          if [[ "${LATEST_TAG}" != "${LAST_VERSION}" ]]; then
-            echo "New release detected: ${LATEST_TAG}"
-            echo new_release='true' >> $GITHUB_ENV
+          if [[ "${env.LATEST_TAG}" != "${LAST_VERSION}" ]]; then
+            echo "New release detected: ${env.LATEST_TAG}"
+            echo "new_release='true'" >> $GITHUB_ENV
           else
             echo "No new release found."
-            echo new_release='false' >> $GITHUB_ENV
+            echo "new_release='false'" >> $GITHUB_ENV
           fi
 
       - name: Update stored version
         if: env.new_release == 'true'
         working-directory: src/terraform/mlz
         run: |
-          sed -i s/${LAST_VERSION}/${LATEST_TAG}/g *
+          sed -i s/${LAST_VERSION}/${env.LATEST_TAG}/g *
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
           git add .
-          git commit -m "Update last release version to ${LATEST_TAG}" || echo "No changes to commit"
+          git commit -m "Update last release version to ${env.LATEST_TAG}" || echo "No changes to commit"
           git push
 
       - name: Trigger CI
         if: env.new_release == 'true'
         run: |
-          echo "Running tasks for new release: ${LATEST_TAG}"
+          echo "Running tasks for new release: ${env.LATEST_TAG}"
       
       - uses: azure/login@v2
         if: env.new_release == 'true'
