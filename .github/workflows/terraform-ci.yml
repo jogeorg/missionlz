@@ -73,6 +73,7 @@ jobs:
         if: ${{ env.new_release == 'true' }}
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
+          environment: 'AzureUSGovernment'
 
       - name: Terraform Init
         if: ${{ env.new_release == 'true' }}
