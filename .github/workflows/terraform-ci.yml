@@ -36,7 +36,7 @@ jobs:
 
           # Compare versions
           if [[ "$LATEST_TAG" != "${LAST_VERSION}" ]]; then
-            echo "New release detected: $LATEST_TAG"
+            echo "New release detected: $LATEST_TAG > ${LAST_VERSION}"
             echo "new_release='true'" >> $GITHUB_ENV
           else
             echo "No new release found."
@@ -44,7 +44,7 @@ jobs:
           fi
 
       - name: Update stored version
-        if: env.new_release == 'true'
+        if: ${{ env.new_release == 'true' }}
         working-directory: src/terraform/mlz
         run: |
           sed -i s/$LAST_VERSION/$LATEST_TAG/g *
@@ -55,17 +55,17 @@ jobs:
           git push
 
       - name: Trigger CI
-        if: env.new_release == 'true'
+        if: ${{ env.new_release == 'true' }}
         run: |
           echo "Running tasks for new release: $LATEST_TAG"
       
       - uses: azure/login@v2
-        if: env.new_release == 'true'
+        if: ${{ env.new_release == 'true' }}
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Terraform Init
-        if: env.new_release == 'true'
+        if: ${{ env.new_release == 'true' }}
         working-directory: src/terraform/mlz
         run: |
           terraform init \
@@ -75,13 +75,13 @@ jobs:
             -backend-config="key=${{ secrets.BACKEND_KEY }}"
 
       - name: Terraform Plan
-        if: env.new_release == 'true'
+        if: ${{ env.new_release == 'true' }}
         working-directory: src/terraform/mlz
         run: |
           terraform plan -out=tfplan --detailed_exitcode || echo "Terraform Plan completed with non-zero exit code"
 
       - name: Terraform Apply
-        if: env.new_release == 'true'
+        if: ${{ env.new_release == 'true' }}
         working-directory: src/terraform/mlz
         run: |
           terraform apply -auto-approve tfplan
