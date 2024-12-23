@@ -48,8 +48,12 @@ jobs:
         if: ${{ env.new_release == 'true' }}
         working-directory: src/terraform/mlz
         run: |
+          # Remove the 'v' prefix from LATEST_TAG
+          LATEST_TAG_STRIPPED=$(echo "$LATEST_TAG" | sed 's/^v//')
+
+          # Escape special characters in LAST_VERSION and LATEST_TAG
           LAST_VERSION_ESCAPED=$(echo "$LAST_VERSION" | sed 's/[.[\*^$(){}?+|\/]/\\&/g')
-          LATEST_TAG_ESCAPED=$(echo "$LATEST_TAG" | sed 's/[.[\*^$(){}?+|\/]/\\&/g')
+          LATEST_TAG_ESCAPED=$(echo "$LATEST_TAG_STRIPPED" | sed 's/[.[\*^$(){}?+|\/]/\\&/g')
 
           if [[ -n "$LAST_VERSION" && -n "$LATEST_TAG" ]]; then
             sed -i "s/$LAST_VERSION_ESCAPED/$LATEST_TAG_ESCAPED/g" *
