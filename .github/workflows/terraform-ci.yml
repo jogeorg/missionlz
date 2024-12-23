@@ -107,11 +107,18 @@ jobs:
         if: ${{ env.new_release == 'true' }}
         working-directory: src/terraform/mlz
         run: |
-          terraform plan -out=tfplan || echo "Terraform Plan completed with non-zero exit code"
+          terraform plan --var "hub_subid=$ARM_SUBSCRIPTION_ID" -out=tfplan|| echo "Terraform Plan completed with non-zero exit code"
 
       - name: Terraform Apply
         if: ${{ env.new_release == 'true' }}
         working-directory: src/terraform/mlz
         run: |
-          terraform apply -auto-approve tfplan
+          terraform apply --var "hub_subid=$ARM_SUBSCRIPTION_ID" -auto-approve tfplan
 
+      # TODO: Add a step to run the unit testing
+
+      - name: Terraform Destroy
+        if: ${{ env.new_release == 'true' }}
+        working-directory: src/terraform/mlz
+        run: |
+          terraform destroy -auto-approve
