@@ -113,7 +113,7 @@ jobs:
         if: ${{ env.new_release == 'true' }}
         working-directory: src/terraform/mlz
         run: |
-          terraform apply --var "hub_subid=$ARM_SUBSCRIPTION_ID" -auto-approve tfplan
+          terraform apply -auto-approve tfplan
 
       # TODO: Add a step to run the unit testing
 
