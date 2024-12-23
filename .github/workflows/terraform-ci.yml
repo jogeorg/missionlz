@@ -88,7 +88,7 @@ jobs:
             terraform_version: 1.9.7
 
       - name: Terraform Init
-        if: ${{ env.new_release == 'true' }} && success()
+        if: env.new_release == 'true' && success()
         working-directory: src/terraform/mlz
         run: |
           terraform init \
@@ -99,13 +99,13 @@ jobs:
             -backend-config="environment=usgovernment"
 
       - name: Terraform Plan
-        if: ${{ env.new_release == 'true' }} && success()
+        if: env.new_release == 'true' && success()
         working-directory: src/terraform/mlz
         run: |
           terraform plan --var "hub_subid=$ARM_SUBSCRIPTION_ID" -out=tfplan|| echo "Terraform Plan completed with non-zero exit code"
 
       - name: Terraform Apply
-        if: ${{ env.new_release == 'true' }} && success()
+        if: env.new_release == 'true' && success()
         working-directory: src/terraform/mlz
         run: |
           terraform apply -auto-approve tfplan
@@ -113,13 +113,13 @@ jobs:
       # TODO: Add a step to run the unit testing
 
       - name: Terraform Destroy
-        if: ${{ env.new_release == 'true' }} && success()
+        if: env.new_release == 'true' && success()
         working-directory: src/terraform/mlz
         run: |
           terraform destroy --var "hub_subid=$ARM_SUBSCRIPTION_ID" -auto-approve
 
       - name: Commit changes and PR
-        if: ${{ env.new_release == 'true' }} && success()
+        if: env.new_release == 'true' && success()
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
