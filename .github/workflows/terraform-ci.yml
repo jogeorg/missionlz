@@ -107,7 +107,7 @@ jobs:
         if: ${{ env.new_release == 'true' }}
         working-directory: src/terraform/mlz
         run: |
-          terraform plan -out=tfplan --detailed_exitcode || echo "Terraform Plan completed with non-zero exit code"
+          terraform plan -out=tfplan || echo "Terraform Plan completed with non-zero exit code"
 
       - name: Terraform Apply
         if: ${{ env.new_release == 'true' }}
