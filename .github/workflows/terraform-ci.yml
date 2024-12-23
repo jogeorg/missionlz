@@ -20,8 +20,11 @@ jobs:
           RESPONSE=$(curl -s -H "Accept: application/vnd.github.v3+json" "${API_URL}")
           LATEST_TAG=$(echo "${RESPONSE}" | jq -r '.tag_name')
 
-          echo "Latest release tag: ${LATEST_TAG}"
-          echo "LATEST_TAG=${LATEST_TAG}" >> $GITHUB_ENV
+          # Remove the 'v' prefix from LATEST_TAG
+          LATEST_TAG_STRIPPED=$(echo "$LATEST_TAG" | sed 's/^v//')
+
+          echo "Latest release tag: ${LATEST_TAG_STRIPPED}"
+          echo "LATEST_TAG=${LATEST_TAG_STRIPPED}" >> $GITHUB_ENV
 
       - uses: actions/checkout@v4
         with:
@@ -49,9 +52,6 @@ jobs:
         if: ${{ env.new_release == 'true' }}
         working-directory: src/terraform/mlz
         run: |
-          # Remove the 'v' prefix from LATEST_TAG
-          LATEST_TAG_STRIPPED=$(echo "$LATEST_TAG" | sed 's/^v//')
-
           # Escape special characters in LAST_VERSION and LATEST_TAG
           LAST_VERSION_ESCAPED=$(echo "$LAST_VERSION" | sed 's/[.[\*^$(){}?+|\/]/\\&/g')
           LATEST_TAG_ESCAPED=$(echo "$LATEST_TAG_STRIPPED" | sed 's/[.[\*^$(){}?+|\/]/\\&/g')
