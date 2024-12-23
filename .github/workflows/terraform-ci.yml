@@ -25,6 +25,7 @@ jobs:
 
       - uses: actions/checkout@v4
         with:
+          ref: updating_terraform
           sparse-checkout: |
             src
 
@@ -62,12 +63,6 @@ jobs:
             exit 1
           fi
 
-          git config --global user.name "github-actions"
-          git config --global user.email "actions@github.com"
-          git add .
-          git commit -m "Update last release version to $LATEST_TAG" || echo "No changes to commit"
-          git push
-
       - name: Trigger CI
         if: ${{ env.new_release == 'true' }}
         run: |
@@ -93,7 +88,7 @@ jobs:
             terraform_version: 1.9.7
 
       - name: Terraform Init
-        if: ${{ env.new_release == 'true' }}
+        if: ${{ env.new_release == 'true' }} && success()
         working-directory: src/terraform/mlz
         run: |
           terraform init \
@@ -104,13 +99,13 @@ jobs:
             -backend-config="environment=usgovernment"
 
       - name: Terraform Plan
-        if: ${{ env.new_release == 'true' }}
+        if: ${{ env.new_release == 'true' }} && success()
         working-directory: src/terraform/mlz
         run: |
           terraform plan --var "hub_subid=$ARM_SUBSCRIPTION_ID" -out=tfplan|| echo "Terraform Plan completed with non-zero exit code"
 
       - name: Terraform Apply
-        if: ${{ env.new_release == 'true' }}
+        if: ${{ env.new_release == 'true' }} && success()
         working-directory: src/terraform/mlz
         run: |
           terraform apply -auto-approve tfplan
@@ -118,7 +113,17 @@ jobs:
       # TODO: Add a step to run the unit testing
 
       - name: Terraform Destroy
-        if: ${{ env.new_release == 'true' }}
+        if: ${{ env.new_release == 'true' }} && success()
         working-directory: src/terraform/mlz
         run: |
-          terraform destroy -auto-approve
+          terraform destroy --var "hub_subid=$ARM_SUBSCRIPTION_ID" -auto-approve
+
+      - name: Commit changes and PR
+        if: ${{ env.new_release == 'true' }} && success()
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+          git add .
+          git commit -m "Update version to $LATEST_TAG"
+          git push origin updating_terraform
+          gh pr create --title "Update version to $LATEST_TAG" --body "Automated PR to update version to $LATEST_TAG" --base main --head updating_terraform
