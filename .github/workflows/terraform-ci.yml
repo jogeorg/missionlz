@@ -75,6 +75,14 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
           environment: 'AzureUSGovernment'
       
+      - name: Export Azure Credentials for Terraform
+        if: ${{ env.new_release == 'true' }}
+        run: |
+          echo "ARM_CLIENT_ID=$(jq -r .clientId <<< '${{ secrets.AZURE_CREDENTIALS }}')" >> $GITHUB_ENV
+          echo "ARM_CLIENT_SECRET=$(jq -r .clientSecret <<< '${{ secrets.AZURE_CREDENTIALS }}')" >> $GITHUB_ENV
+          echo "ARM_SUBSCRIPTION_ID=$(jq -r .subscriptionId <<< '${{ secrets.AZURE_CREDENTIALS }}')" >> $GITHUB_ENV
+          echo "ARM_TENANT_ID=$(jq -r .tenantId <<< '${{ secrets.AZURE_CREDENTIALS }}')" >> $GITHUB_ENV
+      
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
         with:
@@ -90,6 +98,7 @@ jobs:
             -backend-config="container_name=${{ secrets.BACKEND_CONTAINER_NAME }}" \
             -backend-config="key=${{ secrets.BACKEND_KEY }}" \
             -backend-config="environment=usgovernment"
+
       - name: Terraform Plan
         if: ${{ env.new_release == 'true' }}
         working-directory: src/terraform/mlz
